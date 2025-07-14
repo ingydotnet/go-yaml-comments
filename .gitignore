@@ -1,0 +1,6 @@
+/.cache/
+/*.events.yaml
+/*.nodes.yaml
+/*.yq.yaml
+/go-yaml-event/
+/go-yaml-node/

@@ -1,0 +1,55 @@
+#!/usr/bin/env ys-0
+
+api-url =: 'https://api.github.com/gists'
+api-token-file =: "$(ENV.HOME)/.gist-api-token"
+api-token =:
+  cond:
+    fs/f(api-token-file): api-token-file:read:chomp
+    ENV.GIST_API_TOKEN: ENV.GIST_API_TOKEN
+    else:
+      die: |
+        Please put a GitHub token with gist permissions in
+        ~/.gist-api-token or the GIST_API_TOKEN variable.
+
+defn main(name):
+  content =: get-markdown(name)
+  name =: "$name.md"
+  data =: +
+    {name {:content content}}
+
+  request =::
+    :headers:: +{:Authorization "token $api-token"}
+    :body: !:json/dump
+      files:: data
+
+  response =: http/post(api-url request)
+
+  when-not 200 <= response.status <= 201:
+    die: "Gist request failed:\n\n$(response.body)"
+
+  say: json/load(response.body).html_url
+
+defn get-markdown(name): |
+  ## File `$name.yaml`:
+
+  ```yaml
+  $(read("$name.yaml"):chomp)
+  ```
+
+  ## YAML Events:
+
+  ```yaml
+  $(read("$name.events.yaml"):chomp)
+  ```
+
+  ## YAML Nodes:
+
+  ```yaml
+  $(read("$name.nodes.yaml"):chomp)
+  ```
+
+  ## yq YAML:
+
+  ```yaml
+  $(read("$name.yq.yaml"):chomp)
+  ```
